@@ -1,0 +1,45 @@
+# raidzbar — "PAPER" (minimal preset)
+# A single thin, light bar. No pills, no bold, no sliders, no decorations —
+# just workspaces, the active window, time, battery and mute status.
+
+[bar.minimal]
+height = 28
+position = "top"
+background = "#f4f1ebe6"
+foreground = "#33302b"
+font = "monospace"
+font_size = 12.0
+bold = false
+padding_left = 10.0
+padding_right = 10.0
+refresh_interval_ms = 500
+
+# Flat layout: no group styling, no margins, no corner radius, no pill fill.
+modules_left   = ["workspaces"]
+modules_center = ["window"]
+modules_right  = ["clock", "battery", "volume"]
+
+# ── Modules ──────────────────────────────────────────────────────────────────
+[module.workspaces]
+type = "workspaces"
+count = 6
+labels = ["1", "2", "3", "4", "5", "6"]
+active_color   = "#3b5bdb"
+occupied_color = "#6c757d"
+empty_color    = "#b8b3aa"
+
+[module.window]
+type = "window"
+max_length = 50
+empty_label = ""
+
+[module.clock]
+type = "clock"
+format = "%H:%M"
+
+[module.battery]
+type = "battery"
+
+[module.volume]
+type = "volume"
+show_slider = false

@@ -1,0 +1,215 @@
+# raidzbar — "NEON OVERDRIVE" (showoff preset)
+# Two bars, glowing accents, fat rounded pills, custom slider glyphs and every
+# built-in module turned on. Purely designed to show off what raidzbar can do.
+# Requires a Nerd Font (JetBrainsMono Nerd Font or similar).
+
+# ── Primary bar ──────────────────────────────────────────────────────────────
+[bar.neon_top]
+height = 56
+position = "top"
+background = "#0a0512d9"          # translucent deep-violet surface
+foreground = "#e8dcff"
+font = "JetBrainsMono Nerd Font"
+font_size = 15.0
+bold = true
+text_y_offset = 0.5
+padding_left = 12.0
+padding_right = 12.0
+refresh_interval_ms = 100         # 10 Hz — snappy focus/throughput updates
+
+# Thick, floating, highly rounded pills
+margin_top = 9.0
+margin_bottom = 9.0
+margin_left = 14.0
+margin_right = 14.0
+group_spacing = 12.0
+corner_radius = 16.0
+module_background = "#1b0e33e6"
+
+groups_left = [
+    ["workspaces"],
+    ["cpu", "memory", "temperature"],
+]
+groups_center = [
+    ["playback"],
+    ["window"],
+]
+groups_right = [
+    ["network", "bluetooth"],
+    ["battery"],
+    ["brightness", "volume", "microphone"],
+    ["clock"],
+    ["tray"],
+]
+
+# ── Secondary bar (bottom, smaller, calmer) ──────────────────────────────────
+[bar.neon_bottom]
+height = 38
+position = "bottom"
+background = "#0a0512b3"
+foreground = "#c9b6f5"
+font = "JetBrainsMono Nerd Font"
+font_size = 12.0
+bold = false
+padding_left = 10.0
+padding_right = 10.0
+margin_top = 4.0
+margin_bottom = 8.0
+margin_left = 14.0
+margin_right = 14.0
+group_spacing = 8.0
+corner_radius = 10.0
+module_background = "#150a29cc"
+
+groups_left   = [["cpu", "memory", "temperature"]]
+groups_center = [["playback"]]
+groups_right  = [["clock", "battery"]]
+
+# ── Workspaces: hot pink active, cyan occupied, dim violet empty ─────────────
+[module.workspaces]
+type = "workspaces"
+refresh_interval_ms = 100
+count = 8
+labels = ["1", "2", "3", "4", "5", "6", "7", "8"]
+active_color   = "#ff2e97"
+occupied_color = "#00f0ff"
+empty_color    = "#6b4f9e"
+
+# ── Clock: cyan, seconds + date ──────────────────────────────────────────────
+[module.clock]
+type = "clock"
+format = "󰥔 %H:%M:%S   󰃭 %a, %b %e"
+foreground = "#00f0ff"
+
+# ── Window title ─────────────────────────────────────────────────────────────
+[module.window]
+type = "window"
+refresh_interval_ms = 100
+max_length = 90
+empty_label = ""
+foreground = "#f4ecff"
+
+# ── Media controls ───────────────────────────────────────────────────────────
+[module.playback]
+type = "playback"
+format = "{icon}  {track}  {buttons}"
+foreground = "#ff5fc8"
+icon_previous = "󰒮"
+icon_stop     = "󰓛"
+icon_play     = "󰐊"
+icon_pause    = "󰏤"
+icon_next     = "󰒭"
+
+# ── System stats ─────────────────────────────────────────────────────────────
+[module.cpu]
+type = "cpu"
+icon = "󰍛"
+foreground = "#00f0ff"
+
+[module.memory]
+type = "memory"
+format = "󰍛 {used}/{total}  {percent}%"
+foreground = "#b026ff"
+
+[module.temperature]
+type = "temperature"
+icon = "󰔏"
+warn_threshold = 65.0
+critical_threshold = 85.0
+warn_color     = "#ffb800"
+critical_color = "#ff2e97"
+unavailable_color = "#6b4f9e"
+foreground = "#39ff14"
+
+# ── Connectivity ─────────────────────────────────────────────────────────────
+[module.network]
+type = "network"
+format = "󰇚 {download}  󰕒 {upload}"
+foreground = "#00f0ff"
+
+[module.bluetooth]
+type = "bluetooth"
+format = "{icon} {status}"
+icon_on            = "󰂯"
+icon_off           = "󰂲"
+icon_no_controller = "󰂲"
+foreground = "#5b8cff"
+
+# ── Battery ──────────────────────────────────────────────────────────────────
+[module.battery]
+type = "battery"
+icon_low    = "󰁻"
+icon_medium = "󰁾"
+icon_high   = "󰂁"
+icon_full   = "󰁹"
+foreground = "#39ff14"
+
+# ── Brightness with a neon slider ────────────────────────────────────────────
+[module.brightness]
+type = "brightness"
+backend = "auto"
+show_slider = true
+slider_width = 12
+scroll_step = 5
+glyph_left   = "◂"
+glyph_filled = "▰"
+glyph_empty  = "▱"
+glyph_right  = "▸"
+icon_low    = "󰃚"
+icon_medium = "󰃝"
+icon_high   = "󰃠"
+filled_color      = "#39ff14"
+empty_color       = "#4a3b6b"
+unavailable_color = "#ff2e97"
+foreground = "#c8ffb8"
+
+# ── Volume with a hot-pink slider ────────────────────────────────────────────
+[module.volume]
+type = "volume"
+target = "sink"
+show_slider = true
+slider_width = 12
+scroll_step = 5
+glyph_left   = "◂"
+glyph_filled = "▰"
+glyph_empty  = "▱"
+glyph_right  = "▸"
+icon_muted       = "󰝟"
+icon_low         = "󰕿"
+icon_medium      = "󰖀"
+icon_high        = "󰕾"
+icon_unavailable = "󰖁"
+filled_color      = "#ff2e97"
+empty_color       = "#4a3b6b"
+muted_color       = "#ff2e97"
+unavailable_color = "#6b4f9e"
+foreground = "#ff8ad2"
+
+# ── Microphone (input) ───────────────────────────────────────────────────────
+[module.microphone]
+type = "volume"
+target = "source"
+show_slider = true
+slider_width = 8
+scroll_step = 5
+glyph_left   = "◂"
+glyph_filled = "▰"
+glyph_empty  = "▱"
+glyph_right  = "▸"
+icon_muted       = "󰍭"
+icon_low         = "󰍬"
+icon_medium      = "󰍬"
+icon_high        = "󰍬"
+icon_unavailable = "󰍳"
+filled_color = "#b026ff"
+empty_color  = "#4a3b6b"
+muted_color  = "#ff2e97"
+foreground   = "#d8a8ff"
+
+# ── System tray ──────────────────────────────────────────────────────────────
+[module.tray]
+type = "tray"
+icon_size = 20
+icon_spacing = 10.0
+padding_left = 10.0
+padding_right = 10.0

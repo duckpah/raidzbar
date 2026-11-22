@@ -1,0 +1,315 @@
+pub mod battery;
+pub mod bluetooth;
+pub mod brightness;
+pub mod clock;
+pub mod cpu;
+pub mod custom;
+pub mod memory;
+pub mod network;
+pub mod playback;
+pub mod temperature;
+pub mod tray;
+pub mod volume;
+pub mod window;
+pub mod workspaces;
+
+use crate::core::config::{ModuleConfig, resolve_length, resolve_optional_color};
+use crate::core::event::ClickEvent;
+use crate::core::popup::PopupMenu;
+use crate::renderer::color::Color;
+use crate::renderer::primitives::{Renderer, TextStyle};
+
+/// Unique identifier for a module instance.
+pub type ModuleId = String;
+
+/// An icon to render: raw ARGB32 pixels, width and height in pixels.
+#[derive(Debug, Clone)]
+pub struct IconData {
+    /// ARGB32 pixel data, row-major, length = width * height * 4.
+    pub pixels: Vec<u8>,
+    pub width: u32,
+    pub height: u32,
+}
+
+/// The visual output of a module – what the renderer should draw.
+#[derive(Debug, Clone)]
+pub struct TextSegment {
+    pub text: String,
+    pub style: TextStyle,
+}
+
+/// The visual output of a module – what the renderer should draw.
+#[derive(Debug, Clone)]
+pub struct ModuleView {
+    pub text: String,
+    pub text_segments: Vec<TextSegment>,
+    pub style: TextStyle,
+    pub background: Option<Color>,
+    pub padding: (f64, f64), // (left, right)
+    /// Icon-only slots used by modules like the system tray.
+    /// When non-empty the renderer draws icons instead of (or alongside) text.
+    pub icons: Vec<IconData>,
+    /// Override the visual icon rendering size
+    pub icon_size: Option<u32>,
+    /// Per-icon spacing (pixels between icons).
+    pub icon_spacing: f64,
+}
+
+impl Default for ModuleView {
+    fn default() -> Self {
+        Self {
+            text: String::new(),
+            text_segments: Vec::new(),
+            style: TextStyle::default(),
+            background: None,
+            padding: (8.0, 8.0),
+            icons: Vec::new(),
+            icon_size: None,
+            icon_spacing: 4.0,
+        }
+    }
+}
+
+impl ModuleView {
+    pub fn text_width<R: Renderer>(&self, renderer: &R) -> f64 {
+        if self.text_segments.is_empty() {
+            renderer.measure_text(&self.text, &self.style)
+        } else {
+            self.text_segments
+                .iter()
+                .map(|segment| renderer.measure_text(&segment.text, &segment.style))
+                .sum()
+        }
+    }
+
+    pub fn text_height<R: Renderer>(&self, renderer: &R) -> f64 {
+        if self.text_segments.is_empty() {
+            renderer.measure_text_height(&self.text, &self.style)
+        } else {
+            self.text_segments
+                .iter()
+                .map(|segment| renderer.measure_text_height(&segment.text, &segment.style))
+                .fold(
+                    renderer.measure_text_height(&self.text, &self.style),
+                    f64::max,
+                )
+        }
+    }
+}
+
+pub fn char_len(text: &str) -> usize {
+    text.chars().count()
+}
+
+pub fn pad_text_right(text: &str, width: usize) -> String {
+    let padding = width.saturating_sub(char_len(text));
+    if padding == 0 {
+        text.to_string()
+    } else {
+        format!("{text}{}", " ".repeat(padding))
+    }
+}
+
+pub fn prefix_text(prefix: &str, text: &str) -> String {
+    if prefix.trim().is_empty() {
+        text.to_string()
+    } else {
+        format!("{prefix} {text}")
+    }
+}
+
+/// Trim a config string, treating blank values as unset.
+pub(crate) fn normalize_optional_string(value: Option<String>) -> Option<String> {
+    value.and_then(|value| {
+        let trimmed = value.trim();
+        (!trimmed.is_empty()).then(|| trimmed.to_string())
+    })
+}
+
+/// Use a configured format string, falling back to `default` when blank.
+pub(crate) fn resolve_format(format: Option<String>, default: &str) -> String {
+    match format {
+        Some(format) if !format.trim().is_empty() => format,
+        _ => default.to_string(),
+    }
+}
+
+/// Format a byte count with binary units (`B`, `KiB`, …).
+pub(crate) fn format_bytes(bytes: u64) -> String {
+    format_scaled_bytes(bytes, "")
+}
+
+/// Format a throughput with binary units and a per-second suffix.
+pub(crate) fn format_bytes_per_second(bytes: u64) -> String {
+    format_scaled_bytes(bytes, "/s")
+}
+
+fn format_scaled_bytes(bytes: u64, suffix: &str) -> String {
+    const UNITS: [&str; 5] = ["B", "KiB", "MiB", "GiB", "TiB"];
+
+    let mut value = bytes as f64;
+    let mut unit_index = 0usize;
+
+    while value >= 1024.0 && unit_index + 1 < UNITS.len() {
+        value /= 1024.0;
+        unit_index += 1;
+    }
+
+    let number = if unit_index == 0 {
+        bytes.to_string()
+    } else if value >= 100.0 {
+        format!("{value:.0}")
+    } else if value >= 10.0 {
+        format!("{value:.1}")
+    } else {
+        format!("{value:.2}")
+    };
+    format!("{number} {}{suffix}", UNITS[unit_index])
+}
+
+#[derive(Debug, Clone)]
+pub struct ModuleChrome {
+    pub foreground: Option<Color>,
+    pub background: Option<Color>,
+    pub padding: (f64, f64),
+    pub icon_spacing: Option<f64>,
+    /// User-set update interval override (`refresh_interval_ms` in TOML). When
+    /// `Some`, takes priority over the module's built-in default. Modules
+    /// reference this through their own `update_interval()` impl.
+    pub update_interval: Option<std::time::Duration>,
+}
+
+impl Default for ModuleChrome {
+    fn default() -> Self {
+        Self {
+            foreground: None,
+            background: None,
+            padding: (8.0, 8.0),
+            icon_spacing: None,
+            update_interval: None,
+        }
+    }
+}
+
+impl ModuleChrome {
+    pub fn from_config(config: &ModuleConfig, default_padding: (f64, f64)) -> Self {
+        Self {
+            foreground: resolve_optional_color(config.foreground.as_deref(), "module.foreground"),
+            background: resolve_optional_color(config.background.as_deref(), "module.background"),
+            padding: (
+                resolve_length(
+                    config.padding_left,
+                    default_padding.0,
+                    "module.padding_left",
+                ),
+                resolve_length(
+                    config.padding_right,
+                    default_padding.1,
+                    "module.padding_right",
+                ),
+            ),
+            icon_spacing: config.icon_spacing,
+            update_interval: config
+                .refresh_interval_ms
+                .filter(|ms| *ms > 0)
+                .map(|ms| std::time::Duration::from_millis(ms.max(10))),
+        }
+    }
+
+    pub fn apply(&self, mut view: ModuleView) -> ModuleView {
+        if let Some(color) = self.foreground {
+            view.style.color = color;
+        }
+        if let Some(color) = self.background {
+            view.background = Some(color);
+        }
+        view.padding = self.padding;
+        if let Some(spacing) = self.icon_spacing {
+            view.icon_spacing = spacing;
+        }
+        view
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct SliderGlyphs {
+    pub left: String,
+    pub filled: String,
+    pub empty: String,
+    pub right: String,
+}
+
+impl SliderGlyphs {
+    #[cfg(test)]
+    pub fn new(
+        left: impl Into<String>,
+        filled: impl Into<String>,
+        empty: impl Into<String>,
+        right: impl Into<String>,
+    ) -> Self {
+        Self {
+            left: left.into(),
+            filled: filled.into(),
+            empty: empty.into(),
+            right: right.into(),
+        }
+    }
+
+    pub fn from_config(config: &ModuleConfig) -> Self {
+        Self {
+            left: config.glyph_left.clone().unwrap_or_else(|| "▐".to_string()),
+            filled: config
+                .glyph_filled
+                .clone()
+                .unwrap_or_else(|| "█".to_string()),
+            empty: config
+                .glyph_empty
+                .clone()
+                .unwrap_or_else(|| "░".to_string()),
+            right: config
+                .glyph_right
+                .clone()
+                .unwrap_or_else(|| "▌".to_string()),
+        }
+    }
+
+    pub fn unit_chars(&self) -> usize {
+        char_len(&self.filled).max(char_len(&self.empty)).max(1)
+    }
+
+    pub fn total_chars(&self, slots: usize) -> usize {
+        char_len(&self.left) + char_len(&self.right) + slots * self.unit_chars()
+    }
+}
+
+/// Trait that every bar module must implement.
+pub trait Module: Send {
+    /// Called periodically (or on event) to refresh internal state.
+    fn update(&mut self);
+
+    /// Return the current renderable view for this module.
+    fn view(&self) -> ModuleView;
+
+    /// How often `update()` should be called for this module. Defaults to 1s.
+    /// Modules with own background workers (tray, bluetooth) can override to
+    /// a longer interval since their state arrives asynchronously;
+    /// cheap-to-render modules with frequently-changing data (workspaces,
+    /// window title) override to something shorter.
+    fn update_interval(&self) -> std::time::Duration {
+        std::time::Duration::from_secs(1)
+    }
+
+    /// Handle a click event on this module's area. Default: no-op.
+    fn click(&mut self, _event: ClickEvent) {}
+
+    /// Return an active popup menu anchored to the bar, if any.
+    fn popup(&self) -> Option<PopupMenu> {
+        None
+    }
+
+    /// Handle a click on one popup entry.
+    fn popup_click(&mut self, _item_index: usize, _button: crate::core::event::MouseButton) {}
+
+    /// Dismiss the module popup, if any.
+    fn dismiss_popup(&mut self) {}
+}

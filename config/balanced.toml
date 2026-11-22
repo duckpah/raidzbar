@@ -1,0 +1,130 @@
+# raidzbar — "TOKYO NIGHT" (balanced preset)
+# A tasteful middle ground: compact rounded pills, a sensible set of modules,
+# interactive sliders, and enough color to be useful without screaming.
+
+[bar.balanced]
+height = 40
+position = "top"
+background = "#1a1b26d9"
+foreground = "#c0caf5"
+font = "JetBrainsMono Nerd Font"
+font_size = 13.0
+bold = false
+padding_left = 10.0
+padding_right = 10.0
+refresh_interval_ms = 200
+
+margin_top = 7.0
+margin_bottom = 7.0
+margin_left = 10.0
+margin_right = 10.0
+group_spacing = 8.0
+corner_radius = 8.0
+module_background = "#24283bcc"
+
+groups_left = [
+    ["workspaces"],
+    ["cpu", "memory", "temperature"],
+]
+groups_center = [
+    ["window"],
+]
+groups_right = [
+    ["network"],
+    ["brightness", "volume", "battery"],
+    ["clock", "tray"],
+]
+
+# ── Workspaces ───────────────────────────────────────────────────────────────
+[module.workspaces]
+type = "workspaces"
+refresh_interval_ms = 100
+count = 8
+labels = ["1", "2", "3", "4", "5", "6", "7", "8"]
+active_color   = "#7aa2f7"
+occupied_color = "#7dcfff"
+empty_color    = "#565b7d"
+
+# ── Clock & window ───────────────────────────────────────────────────────────
+[module.clock]
+type = "clock"
+format = "󰥔 %H:%M   󰃭 %a %d %b"
+foreground = "#bb9af7"
+
+[module.window]
+type = "window"
+refresh_interval_ms = 100
+max_length = 70
+empty_label = ""
+
+# ── System stats ─────────────────────────────────────────────────────────────
+[module.cpu]
+type = "cpu"
+icon = "󰍛"
+foreground = "#7dcfff"
+
+[module.memory]
+type = "memory"
+format = "󰍛 {used}/{total}"
+foreground = "#9ece6a"
+
+[module.temperature]
+type = "temperature"
+icon = "󰔏"
+warn_threshold = 70.0
+critical_threshold = 90.0
+warn_color     = "#ff9e64"
+critical_color = "#f7768e"
+foreground = "#ff9e64"
+
+# ── Network ──────────────────────────────────────────────────────────────────
+[module.network]
+type = "network"
+format = "󰇚 {download}  󰕒 {upload}"
+foreground = "#7aa2f7"
+
+# ── Brightness ───────────────────────────────────────────────────────────────
+[module.brightness]
+type = "brightness"
+backend = "auto"
+show_slider = true
+slider_width = 10
+scroll_step = 5
+icon_low    = "󰃚"
+icon_medium = "󰃝"
+icon_high   = "󰃠"
+filled_color = "#ff9e64"
+empty_color  = "#4a5068"
+foreground = "#e0af68"
+
+# ── Volume ───────────────────────────────────────────────────────────────────
+[module.volume]
+type = "volume"
+target = "sink"
+show_slider = true
+slider_width = 10
+scroll_step = 5
+icon_muted       = "󰝟"
+icon_low         = "󰕿"
+icon_medium      = "󰖀"
+icon_high        = "󰕾"
+icon_unavailable = "󰖁"
+filled_color = "#7aa2f7"
+empty_color  = "#4a5068"
+muted_color  = "#f7768e"
+foreground = "#7dcfff"
+
+# ── Battery ──────────────────────────────────────────────────────────────────
+[module.battery]
+type = "battery"
+icon_low    = "󰁻"
+icon_medium = "󰁾"
+icon_high   = "󰂁"
+icon_full   = "󰁹"
+foreground = "#9ece6a"
+
+# ── Tray ─────────────────────────────────────────────────────────────────────
+[module.tray]
+type = "tray"
+icon_size = 18
+icon_spacing = 8.0
