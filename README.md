@@ -17,11 +17,25 @@ This is solely for niri to preserve its minimalism goal so if you use other WMs 
 
 ## Images
 
-| | |
-| --- | --- |
-| ![daily](assets/daily.png) | ![default](assets/default.png) |
-| ![minimal](assets/minimal.png) | ![balanced](assets/balanced.png) |
-| ![fancy](assets/fancy.png) | |
+<p align="center">
+  <img src="assets/daily.png" alt="daily" width="1280">
+</p>
+
+<p align="center">
+  <img src="assets/default.png" alt="default" width="1280">
+</p>
+
+<p align="center">
+  <img src="assets/minimal.png" alt="minimal" width="1280">
+</p>
+
+<p align="center">
+  <img src="assets/balanced.png" alt="balanced" width="1280">
+</p>
+
+<p align="center">
+  <img src="assets/fancy.png" alt="fancy" width="1280">
+</p>
 
 ### Configs
 Some example configurations that's created by my abominable taste. Though my daily bar is pretty minimal.
