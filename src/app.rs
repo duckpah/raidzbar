@@ -260,7 +260,6 @@ pub fn build_bar(name: &str, bar_config: &BarConfig, config: &Config) -> Bar {
 /// Build all bars defined in the config.
 pub fn build_bars(config: &Config) -> Vec<Bar> {
     let mut bars = Vec::new();
-    // Sort by name for deterministic ordering.
     let mut names: Vec<&String> = config.bar.keys().collect();
     names.sort();
     for name in names {
@@ -305,8 +304,6 @@ type = "brightness"
         assert_eq!(bars.len(), 1);
         let bar = &bars[0];
 
-        // Flat `modules_right` becomes one single-module group per entry,
-        // preserving order. Each inner Vec has exactly one module id.
         assert_eq!(
             bar.layout.right,
             vec![

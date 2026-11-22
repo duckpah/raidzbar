@@ -1,0 +1,66 @@
+[bar.bottom]
+height = 34
+position = "bottom"
+background = "#000000ff"
+foreground = "697cce"
+font = "MesloLGLDZ Nerd Font Mono"
+font_size = 12.0
+margin_left = 8.0
+margin_right = 8.0
+group_spacing = 8.0
+
+# Autohide (new in your local build)
+# autohide_reveal must be SMALLER than height: it's how many pixels stay
+# visible at the screen edge while the rest of the bar slides away.
+autohide = true
+autohide_delay_ms = 100
+autohide_show_delay_ms = 100
+autohide_reveal = 3
+
+autohide_zone_enabled = false
+
+groups_left  = [["workspaces"]]
+groups_center = [["window"]]
+groups_right = [
+  ["tray", "volume", "clock"]
+]
+
+[module.clock]
+type = "clock"
+format = "%a %b %e  %H:%M"
+foreground = "#a6adc8"
+
+[module.window]
+type = "window"
+refresh_interval_ms = 100
+max_length = 100
+empty_label = ""
+
+[module.tray]
+type = "tray"
+icon_size = 18
+icon_spacing = 6.0
+
+[module.workspaces]
+type = "workspaces"
+refresh_interval_ms = 100
+count = 5
+labels = ["1  ", "2  ", "3  ", "4  ", "5  "]
+active_color = "#cba6f7"
+occupied_color = "#a6adc8"
+empty_color = "#585b70"
+
+[module.volume]
+type = "volume"
+refresh_interval_ms = 1000
+target = "sink"
+show_slider = true
+icon_muted       = "󰝟"
+icon_unknown     = ""
+icon_low         = "󰕿"
+icon_medium      = "󰖀"
+icon_high        = "󰕾"
+icon_unavailable = "󰖁"
+muted_color       = "#f38ba8"
+unavailable_color = "#6c7086"
+foreground = "#679df5"

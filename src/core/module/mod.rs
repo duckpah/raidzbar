@@ -45,7 +45,7 @@ pub struct ModuleView {
     pub text_segments: Vec<TextSegment>,
     pub style: TextStyle,
     pub background: Option<Color>,
-    pub padding: (f64, f64), // (left, right)
+    pub padding: (f64, f64),
     /// Icon-only slots used by modules like the system tray.
     /// When non-empty the renderer draws icons instead of (or alongside) text.
     pub icons: Vec<IconData>,

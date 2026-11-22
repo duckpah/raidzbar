@@ -39,7 +39,6 @@ impl Color {
         })
     }
 
-    // Some useful defaults
     pub const WHITE: Self = Self::rgb(1.0, 1.0, 1.0);
     pub const BLACK: Self = Self::rgb(0.0, 0.0, 0.0);
 }

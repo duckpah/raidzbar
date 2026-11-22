@@ -36,8 +36,6 @@ use crate::core::event::{ClickEvent, MouseButton};
 use crate::core::popup::{PopupItemKind, PopupMenu, PopupMenuItem};
 use crate::renderer::primitives::TextStyle;
 
-// ─── DBus proxy for a StatusNotifierItem ────────────────────────────────────
-
 type DbusMenuLayout = (i32, HashMap<String, OwnedValue>, Vec<OwnedValue>);
 
 #[proxy(
@@ -92,8 +90,6 @@ trait DbusMenu {
 
     fn about_to_show(&self, id: i32) -> zbus::Result<bool>;
 }
-
-// ─── StatusNotifierWatcher interface implementation ──────────────────────────
 
 /// Shared state between the DBus interface object and the rest of the module.
 #[derive(Default, Clone)]
@@ -166,8 +162,6 @@ impl StatusNotifierWatcher {
     }
 }
 
-// ─── Icon resolution helpers ─────────────────────────────────────────────────
-
 /// Premultiply a single straight-alpha colour channel.
 /// Cairo's ARGB32 surfaces expect premultiplied alpha; SNI pixmaps and decoded
 /// PNG/SVG files carry straight (non-premultiplied) alpha, so we must multiply
@@ -232,12 +226,10 @@ fn load_icon_by_name(name: &str, theme_path: &str, size: u32) -> Option<IconData
         }
     }
 
-    // Build a list of candidate paths.
     let mut search_dirs: Vec<std::path::PathBuf> = Vec::new();
     if !theme_path.is_empty() {
         search_dirs.push(std::path::PathBuf::from(theme_path));
     }
-    // Standard XDG icon directories
     if let Some(home) = std::env::var_os("HOME") {
         search_dirs.push(std::path::PathBuf::from(&home).join(".local/share/icons"));
         search_dirs.push(std::path::PathBuf::from(&home).join(".icons"));
@@ -271,16 +263,12 @@ fn load_icon_by_name(name: &str, theme_path: &str, size: u32) -> Option<IconData
             }
         }
 
-        // Pass 2: scan whatever <N>x<N> subdirectories actually exist under
-        // the current dir's hicolor/ — handles unusual icon-theme sizes that
-        // aren't in the preferred list.
         for theme_root in [dir.join("hicolor"), dir.clone()] {
             if let Some(found) = scan_size_subdirs(&theme_root, name, size, &extensions) {
                 return Some(found);
             }
         }
 
-        // Pass 3: flat fallback: <dir>/<name>.<ext>
         for ext in &extensions {
             let path = dir.join(format!("{}.{}", name, ext));
             if path.exists()
@@ -309,7 +297,6 @@ fn scan_size_subdirs(
             continue;
         }
         let dir_name = entry.file_name().to_string_lossy().into_owned();
-        // Match "NxN" (16x16, 22x22, 48x48, etc.)
         if let Some((w, h)) = dir_name.split_once('x')
             && w == h
             && let Ok(n) = w.parse::<u32>()
@@ -317,7 +304,6 @@ fn scan_size_subdirs(
             sized.push((n, path));
         }
     }
-    // Try closest size first.
     sized.sort_by_key(|(n, _)| (*n as i64 - target_size as i64).abs());
     for (_, dir) in sized {
         for sub in ["apps", "status", "devices"] {
@@ -360,8 +346,6 @@ fn load_image_file(path: &std::path::Path, size: u32) -> Option<IconData> {
         height: h,
     })
 }
-
-// ─── Icon fetching ────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone)]
 enum InlineMenuItemKind {
@@ -724,9 +708,7 @@ async fn fetch_icon(conn: &Connection, service: &str, icon_size: u32) -> Option<
     let title = proxy.title().await.unwrap_or_default();
     let status = proxy.status().await.unwrap_or_default();
 
-    // Prefer icon_pixmap (has the actual pixels).
     if let Ok(pixmaps) = proxy.icon_pixmap().await {
-        // Pick the pixmap closest to the desired size.
         let best = pixmaps.iter().min_by_key(|(w, h, _)| {
             let s = (*w).max(*h) as i64;
             (s - icon_size as i64).abs()
@@ -751,7 +733,6 @@ async fn fetch_icon(conn: &Connection, service: &str, icon_size: u32) -> Option<
         }
     }
 
-    // Fall back to icon_name + optional theme path.
     let icon_name = proxy.icon_name().await.unwrap_or_default();
     if !icon_name.is_empty() {
         let theme_path = proxy.icon_theme_path().await.unwrap_or_default();
@@ -790,8 +771,6 @@ async fn fetch_icon(conn: &Connection, service: &str, icon_size: u32) -> Option<
     None
 }
 
-// ─── TrayModule ───────────────────────────────────────────────────────────────
-
 pub struct TrayModule {
     /// Tokio runtime that owns all async tasks.
     rt: Arc<Runtime>,
@@ -829,7 +808,6 @@ impl TrayModule {
             Arc::new(Mutex::new(HashMap::new()));
         let conn_cell: Arc<Mutex<Option<Connection>>> = Arc::new(Mutex::new(None));
 
-        // Spawn the watcher background task.
         {
             let state_clone = watcher_state.clone();
             let conn_cell_clone = conn_cell.clone();
@@ -860,7 +838,6 @@ async fn run_watcher(
     conn_cell: Arc<Mutex<Option<Connection>>>,
     item_tx: watch::Sender<Vec<String>>,
 ) {
-    // Build the DBus connection and register the watcher interface.
     let watcher_obj = StatusNotifierWatcher {
         state: state.clone(),
         item_tx: item_tx.clone(),
@@ -892,7 +869,6 @@ async fn run_watcher(
         }
     };
 
-    // Register ourselves as a StatusNotifierHost so apps know a host is present.
     if let Ok(proxy) = zbus::fdo::DBusProxy::new(&conn).await {
         let host_name = format!("org.kde.StatusNotifierHost-{}", std::process::id());
         let _ = proxy
@@ -926,7 +902,6 @@ async fn run_watcher(
         }
     }
 
-    // Store connection for use by fetch tasks.
     {
         let mut guard = conn_cell.lock().unwrap();
         *guard = Some(conn.clone());
@@ -946,7 +921,6 @@ async fn run_watcher(
     ));
     tokio::spawn(watch_name_owner_changed_signals(conn, state, item_tx));
 
-    // Keep the connection alive indefinitely.
     std::future::pending::<()>().await;
 }
 
@@ -1076,15 +1050,12 @@ async fn watch_name_owner_changed_signals(
 
 impl Module for TrayModule {
     fn update_interval(&self) -> std::time::Duration {
-        // Icons + items propagate through async signals; we re-poll the
-        // cache periodically to pick up additions.
         self.chrome
             .update_interval
             .unwrap_or(std::time::Duration::from_secs(1))
     }
 
     fn update(&mut self) {
-        // Snapshot the current item list.
         let items: Vec<String> = self.item_rx.borrow().clone();
 
         {
@@ -1103,11 +1074,7 @@ impl Module for TrayModule {
         let conn_cell = self.conn.clone();
         let icon_size = self.icon_size;
 
-        // Fetch icons for any items not yet in cache.
-        // This runs on the tokio runtime and completes asynchronously; the
-        // results will be visible on the *next* `update()` / `view()` call.
         self.rt.spawn(async move {
-            // Get a connection if available.
             let conn = {
                 let guard = conn_cell.lock().unwrap();
                 guard.clone()
@@ -1120,7 +1087,6 @@ impl Module for TrayModule {
             let mut new_icons: Vec<IconData> = Vec::new();
             let mut new_items: Vec<String> = Vec::new();
             for service in &items {
-                // Check cache first.
                 let cached = {
                     let cache = icon_cache.lock().unwrap();
                     cache.get(service).cloned()
@@ -1130,7 +1096,6 @@ impl Module for TrayModule {
                     new_items.push(service.clone());
                     continue;
                 }
-                // Fetch from DBus.
                 if let Some(icon) = fetch_icon(&conn, service, icon_size).await {
                     {
                         let mut cache = icon_cache.lock().unwrap();
@@ -1141,7 +1106,6 @@ impl Module for TrayModule {
                 }
             }
 
-            // Evict cache entries for items that are no longer registered.
             {
                 let mut cache = icon_cache.lock().unwrap();
                 cache.retain(|k, _| items.contains(k));
@@ -1284,7 +1248,6 @@ impl Module for TrayModule {
                     }
                 });
             }
-            // Tray items have no meaningful response to wheel events; ignore.
             MouseButton::ScrollUp | MouseButton::ScrollDown | MouseButton::Other(_) => {}
         }
     }
@@ -1306,14 +1269,12 @@ impl Module for TrayModule {
         let menu = self.inline_menu.lock().unwrap().clone()?;
         let mut items: Vec<PopupMenuItem> = Vec::new();
 
-        // When inside a submenu, prepend a "← parent" back-navigation row.
         if let Some((parent_label, _)) = menu.breadcrumbs.last() {
             items.push(PopupMenuItem {
                 label: format!("\u{2039} {}", parent_label),
                 enabled: true,
                 kind: PopupItemKind::Action,
             });
-            // Separator between back row and submenu contents.
             items.push(PopupMenuItem {
                 label: String::new(),
                 enabled: false,
@@ -1343,8 +1304,6 @@ impl Module for TrayModule {
             return;
         }
 
-        // Borrow the menu mutably so we can either replace it (drill-in) or
-        // take it (action/checkbox triggers a real DBus event and dismisses).
         let mut menu_guard = self.inline_menu.lock().unwrap();
         let Some(menu) = menu_guard.as_mut() else {
             return;
@@ -1355,7 +1314,6 @@ impl Module for TrayModule {
         let has_back = !menu.breadcrumbs.is_empty();
         let header_rows: usize = if has_back { 2 } else { 0 };
 
-        // Back-nav row clicked → pop the breadcrumb stack.
         if has_back && item_index == 0 {
             if let Some((_, parent_items)) = menu.breadcrumbs.pop() {
                 menu.items = parent_items;
@@ -1363,7 +1321,6 @@ impl Module for TrayModule {
             return;
         }
 
-        // Separator row (index 1) is not actionable.
         if has_back && item_index == 1 {
             return;
         }
@@ -1378,8 +1335,6 @@ impl Module for TrayModule {
 
         match item.kind {
             InlineMenuItemKind::Submenu(children) => {
-                // Drill in: push current items onto the breadcrumb stack and
-                // swap to the children. Keep the popup open.
                 let parent_items = std::mem::take(&mut menu.items);
                 menu.breadcrumbs.push((item.label.clone(), parent_items));
                 menu.items = children;

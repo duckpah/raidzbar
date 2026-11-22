@@ -409,8 +409,6 @@ impl Config {
             }
         }
 
-        // No config found anywhere: write the bundled default to the user's
-        // XDG config dir so they can edit it directly, then load from there.
         if let Some(path) = dirs_maybe() {
             match write_default_config(&path) {
                 Ok(()) => log::info!("Wrote default config to {}", path.display()),

@@ -380,7 +380,6 @@ impl BrightnessModule {
         if self.backend == BrightnessBackend::Unavailable {
             return None;
         }
-        // No slider visible → clicks aren't bound to anything.
         if !self.show_slider {
             return None;
         }
@@ -458,8 +457,6 @@ impl Module for BrightnessModule {
         let percent_text = self.percent_text();
 
         if !self.show_slider {
-            // Compact form: `<icon> <pct>%` — matches waybar's backlight
-            // visuals (no progress bar).
             let full_text = format!("{icon_slot}{icon_gap}{percent_text}");
             return self.chrome.apply(ModuleView {
                 text: full_text,
@@ -543,8 +540,6 @@ impl Module for BrightnessModule {
                 Some(ClickAction::SetBrightness(percent)) => self.set_brightness_percent(percent),
                 None => {}
             },
-            // Wheel anywhere on the module nudges brightness, matching
-            // waybar's `on-scroll-up` / `on-scroll-down`.
             MouseButton::ScrollUp => {
                 if self.state_known {
                     self.set_brightness_percent(self.nudged_percent(1));

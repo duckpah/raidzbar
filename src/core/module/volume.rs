@@ -459,7 +459,6 @@ impl VolumeModule {
             return None;
         }
 
-        // Compact form (no slider): whole module is a mute toggle.
         if !self.show_slider {
             return Some(ClickAction::ToggleMute);
         }
@@ -545,8 +544,6 @@ impl Module for VolumeModule {
         let percent_text = self.percent_text();
 
         if !self.show_slider {
-            // Compact form: `<icon> <pct>%` — matches waybar's pulseaudio
-            // visuals (no progress bar).
             let full_text = format!("{icon_slot}{icon_gap}{percent_text}");
             return self.chrome.apply(ModuleView {
                 text: full_text,
@@ -635,8 +632,6 @@ impl Module for VolumeModule {
                 Some(ClickAction::SetVolume(percent)) => self.set_volume_percent(percent),
                 None => {}
             },
-            // Wheel up/down anywhere on the module nudges the volume — matches
-            // waybar's `on-scroll-up` / `on-scroll-down` behaviour.
             MouseButton::ScrollUp => {
                 if self.state_known {
                     self.set_volume_percent(self.nudged_percent(1));

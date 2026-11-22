@@ -80,12 +80,9 @@ impl BluetoothModule {
 
 impl Module for BluetoothModule {
     fn update(&mut self) {
-        // Polling runs in the background; nothing to do here.
     }
 
     fn update_interval(&self) -> std::time::Duration {
-        // update() is a no-op — the real polling runs on a dedicated tokio
-        // task. This interval only governs how often we wake the bar.
         self.chrome
             .update_interval
             .unwrap_or(std::time::Duration::from_secs(1))
@@ -137,7 +134,6 @@ async fn run_poller(state: Arc<Mutex<BluetoothState>>, poll_interval: Duration) 
 async fn poll_once() -> zbus::Result<BluetoothState> {
     let conn = Connection::system().await?;
 
-    // Cheapest probe: ask the bus daemon whether anyone owns org.bluez.
     let dbus = fdo::DBusProxy::new(&conn).await?;
     let owned = dbus
         .name_has_owner("org.bluez".try_into().map_err(|e: zbus::names::Error| {
@@ -150,7 +146,6 @@ async fn poll_once() -> zbus::Result<BluetoothState> {
         return Ok(BluetoothState::NoController);
     }
 
-    // Enumerate adapters and devices via ObjectManager.
     let om = fdo::ObjectManagerProxy::builder(&conn)
         .destination("org.bluez")?
         .path("/")?

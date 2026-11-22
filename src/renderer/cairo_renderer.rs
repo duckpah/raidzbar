@@ -38,7 +38,6 @@ impl Renderer for CairoRenderer {
         self.surface = ImageSurface::create(Format::ARgb32, width as i32, height as i32)
             .expect("failed to create cairo surface");
         let cr = Context::new(&self.surface).expect("failed to create cairo context");
-        // Clear
         cr.set_operator(cairo::Operator::Clear);
         cr.paint().unwrap();
         cr.set_operator(cairo::Operator::Over);
@@ -71,13 +70,9 @@ impl Renderer for CairoRenderer {
         let w = rect.width;
         let h = rect.height;
         cr.new_sub_path();
-        // Top-right corner.
         cr.arc(x + w - r, y + r, r, -PI / 2.0, 0.0);
-        // Bottom-right corner.
         cr.arc(x + w - r, y + h - r, r, 0.0, PI / 2.0);
-        // Bottom-left corner.
         cr.arc(x + r, y + h - r, r, PI / 2.0, PI);
-        // Top-left corner.
         cr.arc(x + r, y + r, r, PI, 3.0 * PI / 2.0);
         cr.close_path();
 
@@ -139,7 +134,6 @@ impl Renderer for CairoRenderer {
     }
 
     fn measure_text(&self, text: &str, style: &TextStyle) -> f64 {
-        // Use the active context if available, otherwise create a temporary one
         let tmp_cr;
         let cr = match self.cr.as_ref() {
             Some(cr) => cr,
@@ -192,9 +186,6 @@ impl Renderer for CairoRenderer {
             None => return,
         };
 
-        // Build a Cairo ImageSurface by copying the raw ARGB32 pixels.
-        // We use a temporary surface + context to blit the data in, so
-        // `create_for_data` borrow issues are avoided.
         let expected = (src_width * src_height * 4) as usize;
         if pixels.len() < expected {
             return;
@@ -202,7 +193,6 @@ impl Renderer for CairoRenderer {
         let stride = cairo::Format::ARgb32
             .stride_for_width(src_width)
             .unwrap_or(src_width as i32 * 4) as usize;
-        // Create a blank surface and write pixels row by row.
         let mut icon_surface = match cairo::ImageSurface::create(
             cairo::Format::ARgb32,
             src_width as i32,
@@ -228,7 +218,7 @@ impl Renderer for CairoRenderer {
                         .copy_from_slice(&pixels[src_off..src_off + copy_len]);
                 }
             }
-        } // surf_data borrow dropped here, surface is now usable
+        }
 
         cr.save().ok();
 
@@ -249,7 +239,6 @@ impl Renderer for CairoRenderer {
         cr.scale(scale, scale);
 
         cr.set_source_surface(&icon_surface, 0.0, 0.0).ok();
-        // Set bilinear filter on the source pattern for smooth scaling.
         cr.source().set_filter(cairo::Filter::Bilinear);
         cr.rectangle(0.0, 0.0, src_w, src_h);
         cr.fill().ok();

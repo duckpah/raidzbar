@@ -64,9 +64,7 @@ impl BarLayout {
     ) -> Vec<GroupRegion> {
         let mut groups = Vec::new();
 
-        // ── Left-aligned groups: laid out left-to-right from `margin_left`.
-        // Groups that measure zero wide (every module in them has nothing to
-        // show) get no gap either, so hiding one never leaves a hole.
+        // Zero-width groups get no gap either, so hiding one never leaves a hole.
         let mut x = spacing.margin_left;
         let mut placed_left = false;
         for group in &self.left {
@@ -83,14 +81,10 @@ impl BarLayout {
         }
         let left_edge = x;
 
-        // ── Right-aligned groups: laid out right-to-left from `margin_right`.
         let mut right_x = bar_width - spacing.margin_right;
         let mut placed_right = false;
         for group in self.right.iter().rev() {
-            // Compute width by measuring at a temporary anchor, then shift.
             let probe = build_group_region(0.0, group, measure_width);
-            // The visual gap goes on the right side of the group we're about to
-            // place, when a visible group already sits to its right.
             if probe.width > 0.0 {
                 if placed_right {
                     right_x -= spacing.group_spacing;
@@ -102,8 +96,7 @@ impl BarLayout {
         }
         let right_edge = right_x;
 
-        // ── Center-aligned groups: centered as a block, then constrained to
-        // the free lane between side groups. Without this, a long title can
+        // Constrain center groups to the free lane; otherwise a long title can
         // draw under right-side status modules.
         let center_groups: Vec<GroupRegion> = self
             .center
@@ -296,8 +289,6 @@ mod tests {
 
     #[test]
     fn a_hidden_group_leaves_no_gap() {
-        // The tray-side group stays flush with the margin while the indicator
-        // to its right has nothing to show, and the left side likewise.
         let layout = BarLayout {
             left: vec![vec!["hidden".into()], vec!["left".into()]],
             center: vec![],

@@ -20,22 +20,27 @@ This is solely for niri to preserve its minimalism goal so if you use other WMs 
 <p align="center">
   <img src="assets/daily.png" alt="daily" width="1280">
 </p>
+<p align="center"><b>daily</b></p>
 
 <p align="center">
   <img src="assets/default.png" alt="default" width="1280">
 </p>
+<p align="center"><b>default</b></p>
 
 <p align="center">
   <img src="assets/minimal.png" alt="minimal" width="1280">
 </p>
+<p align="center"><b>minimal</b></p>
 
 <p align="center">
   <img src="assets/balanced.png" alt="balanced" width="1280">
 </p>
+<p align="center"><b>balanced</b></p>
 
 <p align="center">
   <img src="assets/fancy.png" alt="fancy" width="1280">
 </p>
+<p align="center"><b>fancy</b></p>
 
 ### Configs
 Some example configurations that's created by my abominable taste. Though my daily bar is pretty minimal.

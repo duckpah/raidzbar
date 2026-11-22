@@ -150,7 +150,6 @@ impl WorkspacesModule {
         let Some(socket) = self.niri_socket.as_ref() else {
             return;
         };
-        // niri IPC: {"Action":{"FocusWorkspace":{"reference":{"Index":N}}}}
         let request =
             format!(r#"{{"Action":{{"FocusWorkspace":{{"reference":{{"Index":{number}}}}}}}}}"#);
         match niri::request(socket, &request) {

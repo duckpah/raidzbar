@@ -135,8 +135,6 @@ impl Bar {
             let due = *self
                 .next_update
                 .entry(id.clone())
-                // Brand-new module: run it on the first tick rather than
-                // waiting a full interval before showing anything.
                 .or_insert(now);
 
             let due = if now >= due {
@@ -172,8 +170,6 @@ impl Bar {
         view.style.font_family = font_family.clone();
         view.style.font_size = font_size;
         view.style.color = default_color;
-        // Modules don't opt-out of bold, so the bar's setting always wins;
-        // any future per-module override can be plumbed via ModuleChrome.
         view.style.bold = bold;
 
         for segment in &mut view.text_segments {
@@ -276,8 +272,6 @@ impl Bar {
         let Some(view) = self.module_view(id) else {
             return 0.0;
         };
-        // A module with nothing to show takes no space instead of leaving an
-        // empty pill behind.
         if view.icons.is_empty() && view.text.is_empty() && view.text_segments.is_empty() {
             return 0.0;
         }
@@ -306,7 +300,6 @@ impl Bar {
 pub fn render_bar<R: Renderer>(bar: &Bar, renderer: &mut R, width: u32, height: u32) {
     renderer.begin(width, height);
 
-    // Bar surface background (may be fully transparent).
     renderer.draw_rect(
         Rect {
             x: 0.0,
@@ -320,10 +313,6 @@ pub fn render_bar<R: Renderer>(bar: &Bar, renderer: &mut R, width: u32, height: 
     let (pill_top, pill_h) = bar.pill_band();
     let groups = bar.compute_groups(width as f64, renderer);
 
-    // Pass 1: pill group backgrounds. A module that fills its whole group
-    // (the only visible one in it) and has a background of its own, like the
-    // screen-capture indicator, recolors the pill instead of painting a square
-    // box over it, so it keeps the exact shape of every other pill.
     let mut pill_owners: Vec<&ModuleId> = Vec::new();
     for group in &groups {
         if group.width <= 0.0 {
@@ -349,7 +338,6 @@ pub fn render_bar<R: Renderer>(bar: &Bar, renderer: &mut R, width: u32, height: 
         );
     }
 
-    // Pass 2: modules. Per-module backgrounds (if set) draw inside the pill.
     for group in &groups {
         for region in &group.modules {
             if region.width <= 0.0 {

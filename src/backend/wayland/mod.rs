@@ -7,7 +7,6 @@ pub fn run(bars: Vec<Bar>) {
 
     let mut bars = bars;
 
-    // The first bar runs on the main thread; extras each get their own thread.
     let main_bar = bars.remove(0);
     let handles: Vec<_> = bars
         .into_iter()

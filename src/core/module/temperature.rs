@@ -66,7 +66,6 @@ impl TemperatureIcons {
     pub fn from_config(config: &ModuleConfig) -> Self {
         let mut icons = Self::default();
 
-        // A single `icon` sets all three to the same glyph.
         if let Some(value) = &config.icon {
             icons.normal = value.clone();
             icons.warn = value.clone();
@@ -190,8 +189,6 @@ impl TemperatureModule {
                 None => true,
             });
 
-        // Pick the component with the highest current temperature among matches,
-        // which is typically the most relevant reading (e.g. CPU package temp).
         let best = matching.max_by(|a, b| {
             let ta = a.temperature();
             let tb = b.temperature();
@@ -258,7 +255,6 @@ impl Module for TemperatureModule {
 
         let rendered = self.render_text();
 
-        // If temperature exceeds a threshold, colour the entire output.
         let display_style = match self.temp_color() {
             Some(color) => TextStyle {
                 color,
