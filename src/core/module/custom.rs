@@ -3,7 +3,6 @@ use std::process::Command;
 use super::{Module, ModuleChrome, ModuleView};
 use crate::renderer::primitives::TextStyle;
 
-/// A module that runs an arbitrary shell command and displays its stdout.
 pub struct CustomModule {
     command: String,
     output: String,

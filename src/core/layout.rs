@@ -1,6 +1,5 @@
 use super::module::ModuleId;
 
-/// Which section of the bar a module belongs to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Alignment {
     Left,
@@ -8,10 +7,6 @@ pub enum Alignment {
     Right,
 }
 
-/// Describes where modules are placed on the bar.
-///
-/// Each side is a list of groups, and each group is a list of module ids.
-/// A "group" renders as one pill-shaped cluster sharing a background.
 #[derive(Debug, Clone, Default)]
 pub struct BarLayout {
     pub left: Vec<Vec<ModuleId>>,
@@ -19,7 +14,6 @@ pub struct BarLayout {
     pub right: Vec<Vec<ModuleId>>,
 }
 
-/// A computed region for a single module after layout.
 #[derive(Debug, Clone)]
 pub struct ModuleRegion {
     pub id: ModuleId,
@@ -27,7 +21,6 @@ pub struct ModuleRegion {
     pub width: f64,
 }
 
-/// A computed region for a single pill group after layout.
 #[derive(Debug, Clone)]
 pub struct GroupRegion {
     pub x: f64,
@@ -35,7 +28,6 @@ pub struct GroupRegion {
     pub modules: Vec<ModuleRegion>,
 }
 
-/// Spacing parameters used when computing the layout.
 #[derive(Debug, Clone, Copy)]
 pub struct LayoutSpacing {
     pub margin_left: f64,
@@ -54,8 +46,6 @@ impl Default for LayoutSpacing {
 }
 
 impl BarLayout {
-    /// Compute pixel regions for each group (and the modules within them) given
-    /// the total bar width and a width-measurement callback for each module.
     pub fn compute(
         &self,
         bar_width: f64,
@@ -148,7 +138,6 @@ impl BarLayout {
         groups
     }
 
-    /// Flatten all modules in a group list into a single vec, in order.
     pub fn flatten_modules(groups: &[GroupRegion]) -> Vec<ModuleRegion> {
         groups
             .iter()

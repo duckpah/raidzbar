@@ -29,7 +29,6 @@ pub struct BarConfig {
     #[serde(default = "default_font_size")]
     pub font_size: f64,
 
-    /// Render all bar/module text at Pango bold weight.
     #[serde(default)]
     pub bold: bool,
 
@@ -42,7 +41,6 @@ pub struct BarConfig {
     #[serde(default = "default_padding")]
     pub padding_right: f64,
 
-    /// Position of the bar: "top" (default) or "bottom".
     #[serde(default = "default_position")]
     pub position: String,
 
@@ -67,57 +65,39 @@ pub struct BarConfig {
     #[serde(default)]
     pub groups_right: Vec<Vec<String>>,
 
-    /// Vertical inset of pill groups from the top of the bar.
     #[serde(default)]
     pub margin_top: f64,
 
-    /// Vertical inset of pill groups from the bottom of the bar.
     #[serde(default)]
     pub margin_bottom: f64,
 
-    /// Horizontal inset for the left-most pill from the bar's left edge.
     #[serde(default)]
     pub margin_left: f64,
 
-    /// Horizontal inset for the right-most pill from the bar's right edge.
     #[serde(default)]
     pub margin_right: f64,
 
-    /// Horizontal gap between adjacent pill groups.
     #[serde(default)]
     pub group_spacing: f64,
 
-    /// Corner radius for pill group backgrounds (px).
     #[serde(default)]
     pub corner_radius: f64,
 
-    /// Default fill color for all pill groups. Modules' own backgrounds, if
-    /// set, are drawn on top of this within their slot.
     #[serde(default)]
     pub module_background: Option<String>,
 
-    /// How often (in milliseconds) modules are polled and the bar is redrawn.
-    /// Defaults to 200 ms (5 Hz). Lower values make the bar feel more
-    /// responsive; higher values reduce CPU usage.
     #[serde(default)]
     pub refresh_interval_ms: Option<u64>,
 
-    /// Slide the bar off-screen when the pointer leaves it, and slide it back
-    /// in when the pointer touches the edge. Off by default.
     #[serde(default)]
     pub autohide: bool,
 
-    /// Milliseconds to wait after the pointer leaves before hiding.
     #[serde(default = "default_autohide_delay_ms")]
     pub autohide_delay_ms: u64,
 
-    /// Milliseconds the pointer must stay in the reveal strip before the bar
-    /// slides back in. 0 (the default) reveals immediately.
     #[serde(default)]
     pub autohide_show_delay_ms: u64,
 
-    /// Number of pixels of the bar left on-screen while hidden, used as the
-    /// hot zone that brings the bar back.
     #[serde(default = "default_autohide_reveal")]
     pub autohide_reveal: u32,
 
@@ -126,12 +106,9 @@ pub struct BarConfig {
     #[serde(default = "default_true")]
     pub autohide_zone_enabled: bool,
 
-    /// Width of the horizontal hot zone that reveals the bar. Only used when
-    /// `autohide_zone_enabled` is true; e.g. 200 limits it to a corner.
     #[serde(default)]
     pub autohide_reveal_zone: u32,
 
-    /// Which corner the reveal zone sits in: "right" (default) or "left".
     #[serde(default = "default_autohide_zone_side")]
     pub autohide_zone_side: String,
 }
@@ -157,12 +134,10 @@ fn default_autohide_zone_side() -> String {
 }
 
 impl BarConfig {
-    /// Returns true if the bar is positioned at the bottom.
     pub fn is_bottom(&self) -> bool {
         self.position.eq_ignore_ascii_case("bottom")
     }
 
-    /// How often modules are polled and the bar redrawn.
     pub fn refresh_interval(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.refresh_interval_ms.unwrap_or(200))
     }
@@ -224,48 +199,30 @@ pub struct ModuleConfig {
     #[serde(default)]
     pub icon_full: Option<String>,
 
-    /// Maximum number of characters before the module's text is truncated
-    /// with an ellipsis. Currently used by the `window` module.
     #[serde(default)]
     pub max_length: Option<u32>,
 
-    /// Whether the volume/brightness modules render a slider next to their
-    /// percentage. When false, output is just `{icon} {pct}%` — matching
-    /// waybar's pulseaudio/backlight visuals.
     #[serde(default)]
     pub show_slider: Option<bool>,
 
-    /// Percentage step applied by one wheel tick on volume/brightness modules.
-    /// Defaults to 5 (matching waybar's `scroll-step`).
     #[serde(default)]
     pub scroll_step: Option<u16>,
 
-    /// Override the default refresh interval (in milliseconds) for this
-    /// module. Lets users tune e.g. `[module.battery] refresh_interval_ms =
-    /// 30000` without recompiling. Each module type has a sensible default;
-    /// leaving this unset uses that.
     #[serde(default)]
     pub refresh_interval_ms: Option<u64>,
 
-    /// For the volume module: "sink" (default — speakers) or "source"
-    /// (microphone). Mirrors waybar's `pulseaudio#microphone`.
     #[serde(default)]
     pub target: Option<String>,
 
-    /// Optional label shown when a module has nothing to display
-    /// (e.g. the `window` module when there is no focused window).
     #[serde(default)]
     pub empty_label: Option<String>,
 
-    /// Icon used by the `bluetooth` module when the adapter is on.
     #[serde(default)]
     pub icon_on: Option<String>,
 
-    /// Icon used by the `bluetooth` module when the adapter is off.
     #[serde(default)]
     pub icon_off: Option<String>,
 
-    /// Icon used by the `bluetooth` module when no controller is found.
     #[serde(default)]
     pub icon_no_controller: Option<String>,
 
@@ -347,28 +304,21 @@ pub struct ModuleConfig {
     #[serde(default)]
     pub glyph_empty: Option<String>,
 
-    /// Background polling interval in milliseconds for modules that poll on a
-    /// timer (e.g. bluetooth). Defaults vary per module (bluetooth: 2000 ms).
     #[serde(default)]
     pub poll_interval_ms: Option<u64>,
 
-    /// Playback module: icon for the "previous track" button.
     #[serde(default)]
     pub icon_previous: Option<String>,
 
-    /// Playback module: icon for the "stop" button.
     #[serde(default)]
     pub icon_stop: Option<String>,
 
-    /// Playback module: icon shown when media is playing (pause action).
     #[serde(default)]
     pub icon_play: Option<String>,
 
-    /// Playback module: icon shown when media is paused/stopped (play action).
     #[serde(default)]
     pub icon_pause: Option<String>,
 
-    /// Playback module: icon for the "next track" button.
     #[serde(default)]
     pub icon_next: Option<String>,
 }
@@ -482,14 +432,10 @@ impl BarConfig {
         )
     }
 
-    /// Default group background. None if unset or unparseable.
     pub fn resolved_module_background(&self) -> Option<Color> {
         resolve_optional_color(self.module_background.as_deref(), "bar.module_background")
     }
 
-    /// Effective groups for a side. If `groups_*` is set, returns it as-is.
-    /// Otherwise wraps each entry of `modules_*` in its own single-module
-    /// group (backward compatible with the flat layout).
     pub fn effective_groups_left(&self) -> Vec<Vec<String>> {
         effective_groups(&self.groups_left, &self.modules_left)
     }

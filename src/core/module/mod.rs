@@ -19,10 +19,8 @@ use crate::core::popup::PopupMenu;
 use crate::renderer::color::Color;
 use crate::renderer::primitives::{Renderer, TextStyle};
 
-/// Unique identifier for a module instance.
 pub type ModuleId = String;
 
-/// An icon to render: raw ARGB32 pixels, width and height in pixels.
 #[derive(Debug, Clone)]
 pub struct IconData {
     /// ARGB32 pixel data, row-major, length = width * height * 4.
@@ -31,14 +29,12 @@ pub struct IconData {
     pub height: u32,
 }
 
-/// The visual output of a module – what the renderer should draw.
 #[derive(Debug, Clone)]
 pub struct TextSegment {
     pub text: String,
     pub style: TextStyle,
 }
 
-/// The visual output of a module – what the renderer should draw.
 #[derive(Debug, Clone)]
 pub struct ModuleView {
     pub text: String,
@@ -46,12 +42,8 @@ pub struct ModuleView {
     pub style: TextStyle,
     pub background: Option<Color>,
     pub padding: (f64, f64),
-    /// Icon-only slots used by modules like the system tray.
-    /// When non-empty the renderer draws icons instead of (or alongside) text.
     pub icons: Vec<IconData>,
-    /// Override the visual icon rendering size
     pub icon_size: Option<u32>,
-    /// Per-icon spacing (pixels between icons).
     pub icon_spacing: f64,
 }
 
@@ -118,7 +110,6 @@ pub fn prefix_text(prefix: &str, text: &str) -> String {
     }
 }
 
-/// Trim a config string, treating blank values as unset.
 pub(crate) fn normalize_optional_string(value: Option<String>) -> Option<String> {
     value.and_then(|value| {
         let trimmed = value.trim();
@@ -126,7 +117,6 @@ pub(crate) fn normalize_optional_string(value: Option<String>) -> Option<String>
     })
 }
 
-/// Use a configured format string, falling back to `default` when blank.
 pub(crate) fn resolve_format(format: Option<String>, default: &str) -> String {
     match format {
         Some(format) if !format.trim().is_empty() => format,
@@ -134,12 +124,10 @@ pub(crate) fn resolve_format(format: Option<String>, default: &str) -> String {
     }
 }
 
-/// Format a byte count with binary units (`B`, `KiB`, …).
 pub(crate) fn format_bytes(bytes: u64) -> String {
     format_scaled_bytes(bytes, "")
 }
 
-/// Format a throughput with binary units and a per-second suffix.
 pub(crate) fn format_bytes_per_second(bytes: u64) -> String {
     format_scaled_bytes(bytes, "/s")
 }
@@ -282,34 +270,22 @@ impl SliderGlyphs {
     }
 }
 
-/// Trait that every bar module must implement.
 pub trait Module: Send {
-    /// Called periodically (or on event) to refresh internal state.
     fn update(&mut self);
 
-    /// Return the current renderable view for this module.
     fn view(&self) -> ModuleView;
 
-    /// How often `update()` should be called for this module. Defaults to 1s.
-    /// Modules with own background workers (tray, bluetooth) can override to
-    /// a longer interval since their state arrives asynchronously;
-    /// cheap-to-render modules with frequently-changing data (workspaces,
-    /// window title) override to something shorter.
     fn update_interval(&self) -> std::time::Duration {
         std::time::Duration::from_secs(1)
     }
 
-    /// Handle a click event on this module's area. Default: no-op.
     fn click(&mut self, _event: ClickEvent) {}
 
-    /// Return an active popup menu anchored to the bar, if any.
     fn popup(&self) -> Option<PopupMenu> {
         None
     }
 
-    /// Handle a click on one popup entry.
     fn popup_click(&mut self, _item_index: usize, _button: crate::core::event::MouseButton) {}
 
-    /// Dismiss the module popup, if any.
     fn dismiss_popup(&mut self) {}
 }

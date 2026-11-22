@@ -1,4 +1,3 @@
-/// RGBA color (0.0–1.0 per channel).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Color {
     pub r: f64,
@@ -12,7 +11,6 @@ impl Color {
         Self { r, g, b, a: 1.0 }
     }
 
-    /// Parse a hex color string like "#1e1e2e" or "#1e1e2eff".
     pub fn from_hex(hex: &str) -> Option<Self> {
         let hex = hex.trim_start_matches('#');
         let (r, g, b, a) = match hex.len() {

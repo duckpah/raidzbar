@@ -1,9 +1,3 @@
-//! Bluetooth module.
-//!
-//! Queries the bluez system-bus service for adapter + connected-device state
-//! and renders an icon + short status string (e.g. "󰂲 no-controller",
-//! "󰂯 on", "󰂯 SomeHeadset"). When the bluez daemon is not running it
-//! reports "no-controller" — matching waybar's behaviour.
 
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -17,13 +11,9 @@ use crate::renderer::primitives::TextStyle;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BluetoothState {
-    /// bluez daemon not reachable / no adapter known.
     NoController,
-    /// Adapter present but powered off (rfkill or `Powered=false`).
     Off,
-    /// Adapter powered on, no Connected device.
     On,
-    /// Adapter powered on with one or more connected devices.
     Connected(String),
 }
 
@@ -33,9 +23,7 @@ pub struct BluetoothModule {
     icon_on: String,
     icon_off: String,
     icon_no_controller: String,
-    /// Format template. Placeholders: {icon}, {status}.
     format: Option<String>,
-    /// Tokio runtime kept alive for the background polling task.
     _rt: Arc<Runtime>,
 }
 

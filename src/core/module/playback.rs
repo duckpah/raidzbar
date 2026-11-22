@@ -171,7 +171,6 @@ struct PlaybackButtons {
     next: String,
 }
 
-/// Configurable icons for the playback control buttons.
 #[derive(Debug, Clone)]
 pub struct PlaybackButtonIcons {
     pub previous: String,

@@ -14,7 +14,6 @@ fn build_font_desc(style: &TextStyle) -> FontDescription {
     font_desc
 }
 
-/// Cairo + Pango based renderer. Draws to an in-memory image surface.
 pub struct CairoRenderer {
     surface: ImageSurface,
     cr: Option<Context>,

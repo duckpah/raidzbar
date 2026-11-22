@@ -15,8 +15,6 @@ const DEFAULT_DEVICE_PACTL: &str = "@DEFAULT_SINK@";
 const DEFAULT_SOURCE_WPCTL: &str = "@DEFAULT_AUDIO_SOURCE@";
 const DEFAULT_SOURCE_PACTL: &str = "@DEFAULT_SOURCE@";
 
-/// Whether a `VolumeModule` operates on the default sink (speakers) or
-/// the default source (microphone). Selected via the `target` config field.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Target {
     Sink,

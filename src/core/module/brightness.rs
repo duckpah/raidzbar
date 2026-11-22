@@ -130,8 +130,6 @@ impl BrightnessIcons {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum BrightnessBackend {
-    /// Read/write directly via /sys/class/backlight/<device>/. Works on most
-    /// Linux systems out of the box and doesn't need an external binary.
     Sysfs,
     Brightnessctl,
     Unavailable,
@@ -604,8 +602,6 @@ fn sysfs_has_backlight() -> bool {
         .unwrap_or(false)
 }
 
-/// Resolve which sysfs backlight device to use. Returns `None` if no backlight
-/// devices are present at all.
 fn resolve_sysfs_device(preferred: Option<&str>) -> Option<std::path::PathBuf> {
     let root = sysfs_backlight_root();
     if let Some(name) = preferred {
@@ -763,8 +759,6 @@ mod tests {
             + ratio.clamp(0.0, 1.0) * (module.slider_width * module.glyphs.unit_chars()) as f64
     }
 
-    /// Build a module with a fixed backend so tests never depend on the host
-    /// having a backlight device or `brightnessctl` installed.
     fn test_module(
         slider_width: u32,
         max_brightness: u16,

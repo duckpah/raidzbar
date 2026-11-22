@@ -55,8 +55,6 @@ struct WorkspaceState {
     occupied: HashSet<u32>,
 }
 
-/// Reads workspace state from niri over `$NIRI_SOCKET` and renders clickable
-/// numbered indicators.
 pub struct WorkspacesModule {
     count: u32,
     labels: Vec<String>,

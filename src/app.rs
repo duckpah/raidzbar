@@ -173,7 +173,6 @@ fn add_grouped_modules(
     }
 }
 
-/// Build a `Bar` from the loaded configuration.
 pub fn build_bar(name: &str, bar_config: &BarConfig, config: &Config) -> Bar {
     let mut bar = Bar::new(0, bar_config.height);
     bar.name = name.to_string();
@@ -257,7 +256,6 @@ pub fn build_bar(name: &str, bar_config: &BarConfig, config: &Config) -> Bar {
     bar
 }
 
-/// Build all bars defined in the config.
 pub fn build_bars(config: &Config) -> Vec<Bar> {
     let mut bars = Vec::new();
     let mut names: Vec<&String> = config.bar.keys().collect();

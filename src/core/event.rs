@@ -11,7 +11,6 @@ pub enum MouseButton {
     Other(u32),
 }
 
-/// A click event on the bar surface.
 #[derive(Debug, Clone)]
 pub struct ClickEvent {
     /// X coordinate relative to the module's own left edge (0 = module left).
@@ -20,7 +19,6 @@ pub struct ClickEvent {
     pub bar_x: f64,
     /// X coordinate in output/screen space, preserved across module routing.
     pub screen_x: f64,
-    /// Width of the module region in pixels.
     pub module_width: f64,
     /// Y coordinate relative to the bar surface.
     pub y: f64,

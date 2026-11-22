@@ -8,11 +8,8 @@ const POPUP_HORIZONTAL_PADDING: f64 = 12.0;
 const POPUP_VERTICAL_PADDING: f64 = 8.0;
 const POPUP_ROW_VERTICAL_PADDING: f64 = 6.0;
 const POPUP_MIN_WIDTH: f64 = 96.0;
-/// Total height of a separator row (the visible 1-px line is centred in it).
 const POPUP_SEPARATOR_HEIGHT: f64 = 9.0;
-/// Width reserved on the right edge for the submenu chevron.
 const POPUP_CHEVRON_WIDTH: f64 = 16.0;
-/// Width reserved on the left edge for checkbox glyphs.
 const POPUP_CHECKBOX_WIDTH: f64 = 18.0;
 
 const POPUP_BACKGROUND: Color = Color::rgb(0.08, 0.09, 0.12);

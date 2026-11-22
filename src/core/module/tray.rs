@@ -1,26 +1,3 @@
-/// System Tray module — implements the StatusNotifierHost side of the
-/// freedesktop StatusNotifier specification (the modern replacement for the
-/// ancient XEMBED/systray protocol used by KDE Plasma, GNOME extensions,
-/// Waybar, Polybar, etc.)
-///
-/// Architecture
-/// ─────────────
-/// A Tokio runtime is spawned once on construction.  Inside that runtime
-/// the following tasks run:
-///
-///  1. **Watcher task** — registers the process as a `StatusNotifierWatcher`
-///     on the session bus (if no watcher is already present) and also
-///     registers ourselves as a `StatusNotifierHost`.  It listens for
-///     `RegisterStatusNotifierItem` calls and `StatusNotifierItemRegistered`
-///     signals so it always has a fresh list of registered SNI service names.
-///
-///  2. **Icon-fetch loop** — when `update()` is called from the bar's main
-///     thread the module sends the current item list via a channel, fetches
-///     icon data for each item concurrently, converts to ARGB32 and stores
-///     the result in an `Arc<Mutex<Vec<IconData>>>` shared with `view()`.
-///
-/// The SNI specification:
-///   https://www.freedesktop.org/wiki/Specifications/StatusNotifierItem/
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -49,7 +26,6 @@ trait StatusNotifierItem {
     #[zbus(property)]
     fn icon_theme_path(&self) -> zbus::Result<String>;
 
-    /// Returns an array of (width, height, data) structs.
     #[zbus(property)]
     fn icon_pixmap(&self) -> zbus::Result<Vec<(i32, i32, Vec<u8>)>>;
 
@@ -62,18 +38,13 @@ trait StatusNotifierItem {
     #[zbus(property)]
     fn menu(&self) -> zbus::Result<OwnedObjectPath>;
 
-    /// When true the item only has a context menu; a left click (Activate)
-    /// should present that menu instead of activating the application.
     #[zbus(property)]
     fn item_is_menu(&self) -> zbus::Result<bool>;
 
-    /// Show the application or bring its window to the foreground.
     async fn activate(&self, x: i32, y: i32) -> zbus::Result<()>;
 
-    /// Show the item's context menu at the given screen coordinates.
     async fn context_menu(&self, x: i32, y: i32) -> zbus::Result<()>;
 
-    /// Middle-click action (alternate activation).
     async fn secondary_activate(&self, x: i32, y: i32) -> zbus::Result<()>;
 }
 
@@ -91,7 +62,6 @@ trait DbusMenu {
     fn about_to_show(&self, id: i32) -> zbus::Result<bool>;
 }
 
-/// Shared state between the DBus interface object and the rest of the module.
 #[derive(Default, Clone)]
 struct WatcherState {
     items: Arc<Mutex<Vec<String>>>,
@@ -105,7 +75,6 @@ struct StatusNotifierWatcher {
 
 #[interface(name = "org.kde.StatusNotifierWatcher")]
 impl StatusNotifierWatcher {
-    /// Called by SNI clients to register themselves.
     async fn register_status_notifier_item(
         &mut self,
         service: &str,
@@ -121,7 +90,6 @@ impl StatusNotifierWatcher {
         Ok(())
     }
 
-    /// Called by StatusNotifierHost implementations.
     async fn register_status_notifier_host(&mut self, service: &str) -> zbus::fdo::Result<()> {
         let mut hosts = self.state.hosts.lock().unwrap();
         if !hosts.contains(&service.to_string()) {
@@ -130,7 +98,6 @@ impl StatusNotifierWatcher {
         Ok(())
     }
 
-    /// Remove an item when its owner disconnects.
     async fn unregister_status_notifier_item(
         &mut self,
         service: &str,
@@ -145,7 +112,6 @@ impl StatusNotifierWatcher {
         Ok(())
     }
 
-    /// Properties required by the SNI specification.
     #[zbus(property)]
     fn registered_status_notifier_items(&self) -> Vec<String> {
         self.state.items.lock().unwrap().clone()
@@ -202,8 +168,6 @@ fn decode_sni_pixmap(width: i32, height: i32, raw: &[u8]) -> Option<IconData> {
     })
 }
 
-/// Try to load an icon by name from the XDG icon theme.
-/// Falls back to returning `None` if the icon cannot be found.
 fn load_icon_by_name(name: &str, theme_path: &str, size: u32) -> Option<IconData> {
     // Some AppIndicator implementations publish IconName as a real file path
     // instead of a theme icon name. Handle those directly before falling back
@@ -281,8 +245,6 @@ fn load_icon_by_name(name: &str, theme_path: &str, size: u32) -> Option<IconData
     None
 }
 
-/// Walk a theme root looking for `<N>x<N>/(apps|status|devices)/<name>.<ext>`
-/// directories. Picks the size closest to `target_size`.
 fn scan_size_subdirs(
     theme_root: &std::path::Path,
     name: &str,
@@ -320,7 +282,6 @@ fn scan_size_subdirs(
     None
 }
 
-/// Load an image file and convert to ARGB32 at the target `size`.
 fn load_image_file(path: &std::path::Path, size: u32) -> Option<IconData> {
     let img = image::open(path).ok()?;
     let img = img.resize(size, size, image::imageops::FilterType::Triangle);
@@ -368,12 +329,9 @@ struct InlineTrayMenu {
     service: String,
     anchor_x: f64,
     items: Vec<InlineTrayMenuItem>,
-    /// Stack of (parent_label, parent_items) capturing the navigation path.
-    /// Empty when at the root menu.
     breadcrumbs: Vec<(String, Vec<InlineTrayMenuItem>)>,
 }
 
-/// Parse an SNI service string into (bus_name, object_path).
 fn parse_sni_service(service: &str) -> (String, String) {
     if let Some(idx) = service.find('/') {
         (service[..idx].to_owned(), service[idx..].to_owned())
@@ -684,7 +642,6 @@ async fn trigger_inline_menu_item(conn: &Connection, service: &str, item_id: i32
     }
 }
 
-/// Returns true if any pixel in a decoded ARGB32 icon is not fully opaque.
 fn icon_has_alpha(icon: &IconData) -> bool {
     icon.pixels
         .as_chunks::<4>()
@@ -693,7 +650,6 @@ fn icon_has_alpha(icon: &IconData) -> bool {
         .any(|px| px[3] != 0xff)
 }
 
-/// Fetch the best icon for one SNI item.
 async fn fetch_icon(conn: &Connection, service: &str, icon_size: u32) -> Option<IconData> {
     let (bus_name, object_path) = parse_sni_service(service);
     let proxy = StatusNotifierItemProxy::builder(conn)
@@ -772,21 +728,14 @@ async fn fetch_icon(conn: &Connection, service: &str, icon_size: u32) -> Option<
 }
 
 pub struct TrayModule {
-    /// Tokio runtime that owns all async tasks.
     rt: Arc<Runtime>,
-    /// Receives the current list of registered SNI item service names.
     item_rx: watch::Receiver<Vec<String>>,
-    /// Shared icon cache: service_name → IconData.
     icon_cache: Arc<Mutex<HashMap<String, IconData>>>,
-    /// Rendered icons for the current frame (set by `update()`).
     current_icons: Arc<Mutex<Vec<IconData>>>,
     /// Service names in the same order as `current_icons` (for click dispatch).
     current_items: Arc<Mutex<Vec<String>>>,
-    /// Inline menu shown when a tray item exposes dbusmenu instead of ContextMenu.
     inline_menu: Arc<Mutex<Option<InlineTrayMenu>>>,
-    /// DBus connection shared with the fetch tasks.
     conn: Arc<Mutex<Option<Connection>>>,
-    /// Icon size (pixels).
     icon_size: u32,
     chrome: ModuleChrome,
 }
@@ -831,8 +780,6 @@ impl TrayModule {
     }
 }
 
-/// Registers the StatusNotifierWatcher and StatusNotifierHost on the session bus,
-/// then watches for new items arriving via `item_tx`.
 async fn run_watcher(
     state: WatcherState,
     conn_cell: Arc<Mutex<Option<Connection>>>,

@@ -8,16 +8,12 @@ use super::popup::PopupMenu;
 use crate::renderer::color::Color;
 use crate::renderer::primitives::{Point, Rect, Renderer, TextStyle};
 
-/// Outcome of a bar tick. The backend uses `next_due` to size its poll timeout.
 #[derive(Debug, Clone, Copy)]
 pub struct TickResult {
-    /// Instant the next module is due. `None` if there are no modules at all.
     pub next_due: Option<Instant>,
 }
 
-/// Central bar state – owns all modules and the layout.
 pub struct Bar {
-    /// Human-readable name of this bar (from config key).
     pub name: String,
     pub modules: HashMap<ModuleId, Box<dyn Module>>,
     pub layout: BarLayout,
@@ -26,41 +22,25 @@ pub struct Bar {
     pub background: Color,
     pub text_style: TextStyle,
     pub text_y_offset: f64,
-    /// If true, the bar is anchored to the bottom of the screen.
     pub bottom: bool,
-    /// Vertical inset of pill groups (px).
     pub margin_top: f64,
     pub margin_bottom: f64,
-    /// Horizontal inset of the outermost pill on each side (px).
     pub margin_left: f64,
     pub margin_right: f64,
-    /// Horizontal gap between adjacent pills (px).
     pub group_spacing: f64,
-    /// Corner radius for pill backgrounds (px).
     pub corner_radius: f64,
-    /// Default fill color for pill groups.
     pub group_background: Option<Color>,
     /// Upper bound on time between redraws. Modules with background workers
     /// (tray, bluetooth) push their state asynchronously, so the bar still
     /// redraws at this cadence even when no module is due.
     pub refresh_interval: std::time::Duration,
-    /// Slide the bar off-screen when the pointer leaves it (Wayland only).
     pub autohide: bool,
-    /// Delay between the pointer leaving and the bar hiding.
     pub autohide_delay: std::time::Duration,
-    /// Delay before a hidden bar slides back in after the pointer enters the
-    /// reveal strip. Zero means immediate.
     pub autohide_show_delay: std::time::Duration,
-    /// Pixels of the bar left visible while hidden (the reveal hot zone).
     pub autohide_reveal: u32,
-    /// Width of the horizontal corner zone that reveals the bar. 0 = whole edge.
     pub autohide_reveal_zone: u32,
-    /// Corner for the reveal zone: "left" or "right".
     pub autohide_zone_side: String,
-    /// Whether the reveal hot zone is limited to a corner. When false the
-    /// whole edge reveals the bar.
     pub autohide_zone_enabled: bool,
-    /// Per-module "next time `update()` should be called". Populated lazily.
     next_update: HashMap<ModuleId, Instant>,
 }
 
@@ -95,13 +75,10 @@ impl Bar {
         }
     }
 
-    /// Register a module instance under `id`. Layout placement is done
-    /// separately via [`Bar::add_group`].
     pub fn add_module(&mut self, id: impl Into<ModuleId>, module: Box<dyn Module>) {
         self.modules.insert(id.into(), module);
     }
 
-    /// Append a pill group (list of module ids) to the given side.
     pub fn add_group(&mut self, ids: Vec<ModuleId>, section: Alignment) {
         if ids.is_empty() {
             return;
@@ -113,9 +90,6 @@ impl Bar {
         }
     }
 
-    /// Force every module to refresh immediately and reset their schedules
-    /// so the next due time is one interval from now. Used after pointer
-    /// events where the caller wants every module's view current right away.
     pub fn update_all(&mut self) {
         let now = Instant::now();
         for (id, module) in &mut self.modules {
@@ -125,8 +99,6 @@ impl Bar {
         }
     }
 
-    /// Run any modules whose interval has elapsed. The backend uses the returned
-    /// deadline to size its poll timeout instead of busy-ticking.
     pub fn tick(&mut self) -> TickResult {
         let now = Instant::now();
         let mut next_due: Option<Instant> = None;
@@ -184,7 +156,6 @@ impl Bar {
         view
     }
 
-    /// Dispatch a click to the module whose region contains the click.
     pub fn handle_click(&mut self, regions: &[ModuleRegion], event: &ClickEvent) {
         for region in regions {
             let hit = event.x >= region.x && event.x < region.x + region.width;
@@ -244,7 +215,6 @@ impl Bar {
         }
     }
 
-    /// Horizontal layout spacing derived from bar config.
     pub fn spacing(&self) -> LayoutSpacing {
         LayoutSpacing {
             margin_left: self.margin_left,
@@ -262,7 +232,6 @@ impl Bar {
         (self.margin_top, inner)
     }
 
-    /// Measure the rendered width of a module, including its padding.
     pub fn measure_module<R: Renderer>(
         &self,
         id: &ModuleId,
@@ -287,7 +256,6 @@ impl Bar {
         }
     }
 
-    /// Compute the full group layout against a measurement renderer.
     pub fn compute_groups<R: Renderer>(&self, width: f64, renderer: &R) -> Vec<GroupRegion> {
         let (_, pill_h) = self.pill_band();
         let measure = |id: &ModuleId| -> f64 { self.measure_module(id, renderer, pill_h) };
@@ -295,8 +263,6 @@ impl Bar {
     }
 }
 
-/// Render the bar to a renderer. Handles pill backgrounds, modules, and
-/// vertical centering within the pill band.
 pub fn render_bar<R: Renderer>(bar: &Bar, renderer: &mut R, width: u32, height: u32) {
     renderer.begin(width, height);
 
@@ -422,8 +388,6 @@ pub fn render_bar<R: Renderer>(bar: &Bar, renderer: &mut R, width: u32, height: 
     renderer.end();
 }
 
-/// The module that fills `group` on its own: the only one in it with a
-/// non-zero width. `None` when several are visible (or none).
 fn sole_visible_module(group: &GroupRegion) -> Option<&ModuleRegion> {
     let mut visible = group.modules.iter().filter(|region| region.width > 0.0);
     let first = visible.next()?;
